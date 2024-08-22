@@ -1,0 +1,46 @@
+(채크버전) 모든 파일에 freq을 검색해서 imaginary frequency가 있으면 알려주는 .sh 스크립트
+
+#!/bin/bash
+
+# 파일 수 초기화
+file_count=0
+imaginary_count=0
+
+# 이메지너리 프리퀀시가 있는 파일 목록 초기화
+imaginary_files=()
+
+for file in *.log
+do
+    imaginary_exist="no"
+
+    # 이메지너리 프리퀀시 검사
+    grep "Frequencies" "$file" | awk '{
+        for(i=3; i<=NF; i++) {
+            if ($i < 0) {
+                imaginary_exist="yes"
+                exit 1
+            }
+        }
+    }'
+
+    # 이메지너리 프리퀀시가 있는 경우 파일 이름 기록 및 카운트 증가
+    if [ $? -eq 1 ]; then
+        imaginary_files+=("$file")
+        imaginary_count=$((imaginary_count + 1))
+    fi
+
+    # 처리한 파일 수 증가
+    file_count=$((file_count + 1))
+done
+
+# 이메지너리 프리퀀시가 있는 파일 목록 출력
+if [ "$imaginary_count" -gt 0 ]; then
+    echo "Files with imaginary frequencies:"
+    for file in "${imaginary_files[@]}"; do
+        echo "$file"
+    done
+fi
+
+# 최종 요약 출력
+echo "Total files with imaginary frequencies: $imaginary_count"
+echo "Total files checked: $file_count"
